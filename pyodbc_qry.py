@@ -4,6 +4,7 @@ import sys
 
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
+from PyQt5.QtGui import *
 import pypyodbc
 
 class Ui_Form(QWidget):
@@ -81,6 +82,10 @@ class Ui_Form(QWidget):
         self.tblResults.setRowCount(0)
         self.tblResults.setColumnCount(0)
 
+        if not conn:
+            QMessageBox.information(self,"No DB connection","Unable to run queries as no database connection exists",QMessageBox.Ok)
+            return
+
         qtext = self.qryText.toPlainText()
         if qtext == "":
             return
@@ -89,6 +94,10 @@ class Ui_Form(QWidget):
             c=curr.execute(qtext)
         except pypyodbc.ProgrammingError:
             self.tblMessage(sys.exc_info()[1].value[1])
+            return
+        except:
+            print (sys.exc_info())
+            self.tblMessage("SYS:"+sys.exc_info()[1].value[1])
             return
 
         if c.rowcount < 0:
@@ -123,19 +132,23 @@ def main():
 
     app = QApplication(sys.argv)
 
-    connection_string = 'Driver={Ingres};SERVER=(local);DB=pmdb'
-    try:
-        conn = pypyodbc.connect(connection_string)
-        curr = conn.cursor()
-    except:
-        reply = QMessageBox.information(self,
-                sys.exc_info()[1].value[1], Dialog.MESSAGE)
-        conn = None
+
 
 
     # Would normally be invoked as modal dialog.
     # But for simplicity we use it as the main form here.
     form = Ui_Form()
+    print(type(form))
+    connection_string = 'Driver={Ingres};SERVER=(local);DB=pmdb2'
+    try:
+        conn = pypyodbc.connect(connection_string)
+        curr = conn.cursor()
+    except:
+        msg=sys.exc_info()[1].value[1]
+        print (type(msg))
+        reply = QMessageBox.information(form,"Title?",msg,QMessageBox.Ok)
+        print (reply)
+        conn = None
     form.show()
     app.exec_()
     del form
