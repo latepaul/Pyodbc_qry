@@ -77,6 +77,13 @@ class Ui_Form(QWidget):
         self.goButton.clicked.connect(self.button_pushed)
         self.closeButton.clicked.connect(self.close)
 
+    def contextMenuEvent(self, event):
+        menu = QMenu(self)
+        menu.addAction(self.cutAct)
+        menu.addAction(self.copyAct)
+        menu.addAction(self.pasteAct)
+        menu.exec_(event.globalPos())
+
     def button_pushed(self):
 
         self.tblResults.setRowCount(0)
@@ -127,28 +134,39 @@ class Ui_Form(QWidget):
         self.lineEdit.setText(msg)
 
 
+
 def main():
     global curr, conn
 
     app = QApplication(sys.argv)
 
-
-
-
     # Would normally be invoked as modal dialog.
     # But for simplicity we use it as the main form here.
     form = Ui_Form()
     print(type(form))
+
+    sources = pypyodbc.dataSources()
+    print (sources)
+    dsns = list(sources.keys())
+    print (dsns)
+    dsns.sort()
+    sl = []
+    for dsn in dsns:
+        sl.append('%s [%s]' % (dsn, sources[dsn]))
+    print('\n'.join(sl))
+
     connection_string = 'Driver={Ingres};SERVER=(local);DB=pmdb2'
+
+    connection_string = "DSN="+dsn.decode("utf-8")
+    print (connection_string)
     try:
         conn = pypyodbc.connect(connection_string)
         curr = conn.cursor()
     except:
         msg=sys.exc_info()[1].value[1]
-        print (type(msg))
-        reply = QMessageBox.information(form,"Title?",msg,QMessageBox.Ok)
-        print (reply)
+        QMessageBox.information(form,"Error connecting",msg,QMessageBox.Ok)
         conn = None
+
     form.show()
     app.exec_()
     del form
