@@ -7,72 +7,91 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 import pypyodbc
 
-class Ui_Form(QWidget):
-    global curr, conn
+class Ui_MainWindow(QMainWindow):
+    global conn, curr
 
     def __init__(self, parent=None):
-        super(Ui_Form, self).__init__(parent)
+        super(Ui_MainWindow, self).__init__(parent)
         self.setupUi(self)
 
-    def setupUi(self,Dialog):
-        self.resize(650, 302)
-        self.horizontalLayout_2 = QHBoxLayout(Dialog)
-        self.horizontalLayout_2.setObjectName("horizontalLayout_2")
+    def setupUi(self, MainWindow):
+        MainWindow.setObjectName("MainWindow")
+        MainWindow.resize(523, 300)
+        MainWindow.setStatusTip("")
+        self.centralwidget = QWidget(MainWindow)
+        self.centralwidget.setObjectName("centralwidget")
+        self.horizontalLayout = QHBoxLayout(self.centralwidget)
+        self.horizontalLayout.setObjectName("horizontalLayout")
         self.verticalLayout = QVBoxLayout()
         self.verticalLayout.setObjectName("verticalLayout")
-        self.label = QLabel(Dialog)
+        self.label = QLabel(self.centralwidget)
         self.label.setObjectName("label")
         self.verticalLayout.addWidget(self.label)
-        self.qryText = QTextEdit(Dialog)
-        self.qryText.setMinimumSize(QSize(420, 71))
+        self.qryText = QTextEdit(self.centralwidget)
+        self.qryText.setMinimumSize(QSize(420, 70))
         self.qryText.setMaximumSize(QSize(16777215, 130))
+        font = QFont()
+        font.setPointSize(12)
+        self.qryText.setFont(font)
         self.qryText.setObjectName("qryText")
         self.verticalLayout.addWidget(self.qryText)
-        self.label_2 = QLabel(Dialog)
+        self.label_2 = QLabel(self.centralwidget)
         self.label_2.setObjectName("label_2")
         self.verticalLayout.addWidget(self.label_2)
-        self.tblResults = QTableWidget(Dialog)
+        self.tblResults = QTableWidget(self.centralwidget)
+        font = QFont()
+        font.setPointSize(10)
+        self.tblResults.setFont(font)
         self.tblResults.setObjectName("tblResults")
         self.tblResults.setColumnCount(0)
         self.tblResults.setRowCount(0)
         self.verticalLayout.addWidget(self.tblResults)
-        self.label_3 = QLabel(Dialog)
-        self.label_3.setObjectName("label_3")
-        self.verticalLayout.addWidget(self.label_3)
-        self.lineEdit = QLineEdit(Dialog)
-        self.lineEdit.setAlignment(Qt.AlignCenter)
-        self.lineEdit.setObjectName("lineEdit")
-        self.lineEdit.setReadOnly(True)
-        self.verticalLayout.addWidget(self.lineEdit)
-        self.horizontalLayout_2.addLayout(self.verticalLayout)
-        self.verticalLayout_3 = QVBoxLayout()
-        self.verticalLayout_3.setObjectName("verticalLayout_3")
-        spacerItem = QSpacerItem(20, 5, QSizePolicy.Minimum, QSizePolicy.Maximum)
-        self.verticalLayout_3.addItem(spacerItem)
-        self.goButton = QPushButton(Dialog)
+        self.horizontalLayout.addLayout(self.verticalLayout)
+        self.verticalLayout_2 = QVBoxLayout()
+        self.verticalLayout_2.setObjectName("verticalLayout_2")
+        spacerItem = QSpacerItem(20, 20, QSizePolicy.Minimum, QSizePolicy.Maximum)
+        self.verticalLayout_2.addItem(spacerItem)
+        self.goButton = QPushButton(self.centralwidget)
         self.goButton.setObjectName("goButton")
-        self.verticalLayout_3.addWidget(self.goButton)
+        self.verticalLayout_2.addWidget(self.goButton)
         spacerItem1 = QSpacerItem(20, 15, QSizePolicy.Minimum, QSizePolicy.Maximum)
-        self.verticalLayout_3.addItem(spacerItem1)
-        self.closeButton = QPushButton(Dialog)
+        self.verticalLayout_2.addItem(spacerItem1)
+        self.closeButton = QPushButton(self.centralwidget)
         self.closeButton.setObjectName("closeButton")
-        self.verticalLayout_3.addWidget(self.closeButton)
+        self.verticalLayout_2.addWidget(self.closeButton)
         spacerItem2 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
-        self.verticalLayout_3.addItem(spacerItem2)
-        self.horizontalLayout_2.addLayout(self.verticalLayout_3)
+        self.verticalLayout_2.addItem(spacerItem2)
+        self.horizontalLayout.addLayout(self.verticalLayout_2)
+        MainWindow.setCentralWidget(self.centralwidget)
+        self.menubar = QMenuBar(MainWindow)
+        self.menubar.setGeometry(QRect(0, 0, 523, 21))
+        self.menubar.setObjectName("menubar")
+        self.menuConnect = QMenu(self.menubar)
+        self.menuConnect.setObjectName("menuConnect")
+        MainWindow.setMenuBar(self.menubar)
+        self.statusbar = QStatusBar(MainWindow)
+        self.statusbar.setToolTip("")
+        self.statusbar.setStatusTip("")
+        self.statusbar.setObjectName("statusbar")
+        MainWindow.setStatusBar(self.statusbar)
+        self.actionCustom_connection = QAction(MainWindow)
+        self.actionCustom_connection.setObjectName("actionCustom_connection")
+        self.menuConnect.addAction(self.actionCustom_connection)
+        self.menuConnect.addSeparator()
+        self.menubar.addAction(self.menuConnect.menuAction())
 
-        self.retranslateUi(Dialog)
-        QMetaObject.connectSlotsByName(Dialog)
+        self.retranslateUi(MainWindow)
+        QMetaObject.connectSlotsByName(MainWindow)
 
-    def retranslateUi(self, Dialog):
+    def retranslateUi(self, MainWindow):
         _translate = QCoreApplication.translate
-        Dialog.setWindowTitle(_translate("Dialog", "Simple Query Runner"))
-        self.label.setText(_translate("Dialog", "Query"))
-        self.label_2.setText(_translate("Dialog", "Output"))
-        self.label_3.setText(_translate("Dialog", "Status"))
-        self.lineEdit.setText(_translate("Dialog", "0 rows returned."))
-        self.goButton.setText(_translate("Dialog", "Go"))
-        self.closeButton.setText(_translate("Dialog", "Close"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "ODBC Query Runner"))
+        self.label.setText(_translate("MainWindow", "Query:"))
+        self.label_2.setText(_translate("MainWindow", "Output:"))
+        self.goButton.setText(_translate("MainWindow", "Go"))
+        self.closeButton.setText(_translate("MainWindow", "Close"))
+        self.menuConnect.setTitle(_translate("MainWindow", "Connect"))
+        self.actionCustom_connection.setText(_translate("MainWindow", "Custom connection"))
 
         self.goButton.clicked.connect(self.button_pushed)
         self.closeButton.clicked.connect(self.close)
@@ -131,7 +150,7 @@ class Ui_Form(QWidget):
         curr.commit()
 
     def tblMessage(self,msg):
-        self.lineEdit.setText(msg)
+        self.statusbar.showMessage(msg)
 
 
 
@@ -142,7 +161,7 @@ def main():
 
     # Would normally be invoked as modal dialog.
     # But for simplicity we use it as the main form here.
-    form = Ui_Form()
+    form = Ui_MainWindow()
     print(type(form))
 
     sources = pypyodbc.dataSources()
