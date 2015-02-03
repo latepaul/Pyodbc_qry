@@ -7,14 +7,101 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 import pypyodbc
 
+ERROR = 1
+INFO = 2
+NO_DSN = 1
+CUST_DSN = 2
+
+class Ui_custDSNForm(QDialog):
+
+    def __init__(self, parent=None):
+        super(Ui_custDSNForm, self).__init__(parent)
+        self.setupUi(self)
+        self.conn_string = ''
+
+    def setupUi(self, custDSNForm):
+        custDSNForm.setObjectName("custDSNForm")
+        custDSNForm.resize(321, 206)
+        custDSNForm.setMinimumSize(QSize(321, 206))
+        custDSNForm.setMaximumSize(QSize(321, 206))
+        self.horizontalLayout_3 = QHBoxLayout(custDSNForm)
+        self.horizontalLayout_3.setObjectName("horizontalLayout_3")
+        self.verticalLayout = QVBoxLayout()
+        self.verticalLayout.setObjectName("verticalLayout")
+        self.horizontalLayout_2 = QHBoxLayout()
+        self.horizontalLayout_2.setObjectName("horizontalLayout_2")
+        self.label_2 = QLabel(custDSNForm)
+        self.label_2.setObjectName("label_2")
+        self.horizontalLayout_2.addWidget(self.label_2)
+        spacerItem = QSpacerItem(40, 20, QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.horizontalLayout_2.addItem(spacerItem)
+        self.vnode = QLineEdit(custDSNForm)
+        self.vnode.setObjectName("vnode")
+        self.horizontalLayout_2.addWidget(self.vnode)
+        self.verticalLayout.addLayout(self.horizontalLayout_2)
+        self.horizontalLayout = QHBoxLayout()
+        self.horizontalLayout.setObjectName("horizontalLayout")
+        self.label = QLabel(custDSNForm)
+        self.label.setObjectName("label")
+        self.horizontalLayout.addWidget(self.label)
+        spacerItem1 = QSpacerItem(25, 20, QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.horizontalLayout.addItem(spacerItem1)
+        self.dbName = QLineEdit(custDSNForm)
+        self.dbName.setObjectName("dbName")
+        self.horizontalLayout.addWidget(self.dbName)
+        self.verticalLayout.addLayout(self.horizontalLayout)
+        self.horizontalLayout_4 = QHBoxLayout()
+        self.horizontalLayout_4.setObjectName("horizontalLayout_4")
+        self.label_3 = QLabel(custDSNForm)
+        self.label_3.setObjectName("label_3")
+        self.horizontalLayout_4.addWidget(self.label_3)
+        spacerItem2 = QSpacerItem(5, 5, QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.horizontalLayout_4.addItem(spacerItem2)
+        self.params = QLineEdit(custDSNForm)
+        self.params.setObjectName("params")
+        self.horizontalLayout_4.addWidget(self.params)
+        self.verticalLayout.addLayout(self.horizontalLayout_4)
+        self.buttonBox = QDialogButtonBox(custDSNForm)
+        self.buttonBox.setStandardButtons(QDialogButtonBox.Cancel|QDialogButtonBox.Ok)
+        self.buttonBox.setObjectName("buttonBox")
+        self.verticalLayout.addWidget(self.buttonBox, Qt.AlignHCenter)
+        self.horizontalLayout_3.addLayout(self.verticalLayout)
+
+        self.retranslateUi(custDSNForm)
+        QMetaObject.connectSlotsByName(custDSNForm)
+
+    def retranslateUi(self, custDSNForm):
+        _translate = QCoreApplication.translate
+        custDSNForm.setWindowTitle(_translate("custDSNForm", "Custom Datasource"))
+        self.label_2.setText(_translate("custDSNForm", "vnode"))
+        self.vnode.setText(_translate("custDSNForm", "(local)"))
+        self.label.setText(_translate("custDSNForm", "database"))
+        self.label_3.setText(_translate("custDSNForm", "Other params"))
+        self.buttonBox.rejected.connect(self.cancel_close)
+        self.buttonBox.accepted.connect(self.save_close)
+
+    def cancel_close(self):
+        self.conn_string = ''
+        self.close()
+
+    def save_close(self):
+        self.conn_string = 'Driver={Ingres};SERVER='+self.vnode.text()+';DB='+self.dbName.text()
+        if self.params.text() != '':
+            self.conn_string += ';'+self.params.text()
+        self.close()
+
+    def getConnStr(self):
+        return self.conn_string
+
 class Ui_MainWindow(QMainWindow):
-    global conn, curr
+    global conn, curr, ingres_dsns, noni_dsns
 
     def __init__(self, parent=None):
         super(Ui_MainWindow, self).__init__(parent)
         self.setupUi(self)
 
     def setupUi(self, MainWindow):
+
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(523, 300)
         MainWindow.setStatusTip("")
@@ -76,12 +163,57 @@ class Ui_MainWindow(QMainWindow):
         MainWindow.setStatusBar(self.statusbar)
         self.actionCustom_connection = QAction(MainWindow)
         self.actionCustom_connection.setObjectName("actionCustom_connection")
+        self.actionCustom_connection.triggered.connect(lambda tval: self.dostuff("custom",tval))
         self.menuConnect.addAction(self.actionCustom_connection)
         self.menuConnect.addSeparator()
         self.menubar.addAction(self.menuConnect.menuAction())
+        for dsn in ingres_dsns:
+            entry = QAction(dsn,MainWindow)
+            self.menuConnect.addAction(entry)
+            entry.triggered.connect(lambda tval,menuitem=dsn: self.dostuff(menuitem,tval))
+            entry.setText(dsn)
+        self.menuConnect.addSeparator()
+        for dsn in noni_dsns:
+            entry = QAction(dsn,MainWindow)
+            self.menuConnect.addAction(entry)
+            entry.triggered.connect(lambda tval,menuitem=dsn: self.dostuff(menuitem,tval))
+            entry.setText(dsn)
 
         self.retranslateUi(MainWindow)
         QMetaObject.connectSlotsByName(MainWindow)
+
+
+    def dostuff(self,dsn,tval):
+        global conn, curr
+
+        print ("doing stuff to ", dsn)
+        print("meanwhile tval=",tval)
+        if dsn == "custom":
+            cform = Ui_custDSNForm()
+            cform.exec_()
+            print ("Returned:",cform.getConnStr())
+            connection_string = cform.getConnStr()
+            if connection_string == '':
+                self.tblMessage('{no DB connection}')
+                return
+        else:
+            connection_string = "DSN="+dsn
+
+        print ("Attemping connection to %s" % connection_string)
+        try:
+            conn = pypyodbc.connect(connection_string)
+            curr = conn.cursor()
+            self.tblMessage("Connected to ["+dsn+"]")
+        except:
+            print(sys.exc_info())
+
+            etype, evalue, etrace = sys.exc_info()
+            if etype == pypyodbc.DatabaseError:
+                msg=evalue.value[1]
+            else:
+                msg=str(evalue)
+            QMessageBox.information(self,"Error connecting",msg,QMessageBox.Ok)
+            conn = None
 
     def retranslateUi(self, MainWindow):
         _translate = QCoreApplication.translate
@@ -95,21 +227,16 @@ class Ui_MainWindow(QMainWindow):
 
         self.goButton.clicked.connect(self.button_pushed)
         self.closeButton.clicked.connect(self.close)
-
-    def contextMenuEvent(self, event):
-        menu = QMenu(self)
-        menu.addAction(self.cutAct)
-        menu.addAction(self.copyAct)
-        menu.addAction(self.pasteAct)
-        menu.exec_(event.globalPos())
+        self.tblMessage("{no database connection}")
 
     def button_pushed(self):
+        global conn, curr
 
         self.tblResults.setRowCount(0)
         self.tblResults.setColumnCount(0)
 
         if not conn:
-            QMessageBox.information(self,"No DB connection","Unable to run queries as no database connection exists",QMessageBox.Ok)
+            self.errMessage(INFO,"No DB connection","Unable to run queries as no database connection exists")
             return
 
         qtext = self.qryText.toPlainText()
@@ -118,17 +245,20 @@ class Ui_MainWindow(QMainWindow):
 
         try:
             c=curr.execute(qtext)
-        except pypyodbc.ProgrammingError:
-            self.tblMessage(sys.exc_info()[1].value[1])
+        except pypyodbc.DatabaseError:
+            self.errMessage(ERROR,"Database Error",sys.exc_info()[1].value[1])
             return
         except:
             print (sys.exc_info())
-            self.tblMessage("SYS:"+sys.exc_info()[1].value[1])
+            self.errMessage(ERROR,"Sys Error",str(sys.exc_info()[1]))
             return
 
         if c.rowcount < 0:
 
             rs = curr.fetchall()
+            colnames =[]
+            for row in curr.description:
+                colnames.append(row[0])
 
             l = len(rs)
             if l == 0:
@@ -139,6 +269,7 @@ class Ui_MainWindow(QMainWindow):
                 self.tblResults.setRowCount(l)
                 self.tblResults.setColumnCount(r)
 
+                self.tblResults.setHorizontalHeaderLabels(colnames)
                 for i,row in enumerate(rs):
                     for j, col in enumerate(row):
                         item = QTableWidgetItem(str(col))
@@ -152,39 +283,33 @@ class Ui_MainWindow(QMainWindow):
     def tblMessage(self,msg):
         self.statusbar.showMessage(msg)
 
+    def errMessage(self,type,title,msg):
+        if type == ERROR:
+            QMessageBox.critical(self,title,msg,QMessageBox.Ok)
+        else:
+            QMessageBox.information(self,title,msg,QMessageBox.Ok)
+        pass
 
 
 def main():
-    global curr, conn
+    global curr, conn, ingres_dsns, noni_dsns
 
+    conn = None
     app = QApplication(sys.argv)
 
-    # Would normally be invoked as modal dialog.
-    # But for simplicity we use it as the main form here.
-    form = Ui_MainWindow()
-    print(type(form))
-
     sources = pypyodbc.dataSources()
-    print (sources)
-    dsns = list(sources.keys())
-    print (dsns)
-    dsns.sort()
-    sl = []
-    for dsn in dsns:
-        sl.append('%s [%s]' % (dsn, sources[dsn]))
-    print('\n'.join(sl))
 
-    connection_string = 'Driver={Ingres};SERVER=(local);DB=pmdb2'
+    ingres_dsns = []
+    for item in sources:
+        if sources[item].decode() == "Ingres":
+            ingres_dsns.append(item.decode())
 
-    connection_string = "DSN="+dsn.decode("utf-8")
-    print (connection_string)
-    try:
-        conn = pypyodbc.connect(connection_string)
-        curr = conn.cursor()
-    except:
-        msg=sys.exc_info()[1].value[1]
-        QMessageBox.information(form,"Error connecting",msg,QMessageBox.Ok)
-        conn = None
+    noni_dsns = []
+    for item in sources:
+        if sources[item].decode() != "Ingres":
+            noni_dsns.append(item.decode())
+
+    form = Ui_MainWindow()
 
     form.show()
     app.exec_()
