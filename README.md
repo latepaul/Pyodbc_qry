@@ -1,4 +1,4 @@
-Pyodbc._qry
+Pyodbc_qry
 ===========
 
 Simple Python ODBC Query tool.
