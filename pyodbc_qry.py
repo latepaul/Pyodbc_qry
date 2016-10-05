@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 import sys
 
@@ -272,7 +273,7 @@ class Ui_MainWindow(QMainWindow):
                 self.tblResults.setHorizontalHeaderLabels(colnames)
                 for i,row in enumerate(rs):
                     for j, col in enumerate(row):
-                        item = QTableWidgetItem(str(col))
+                        item = QTableWidgetItem(unicode(col))
                         item.setFlags(item.flags() & ~ Qt.ItemIsEditable)
                         self.tblResults.setItem(i,j,item)
         else:
